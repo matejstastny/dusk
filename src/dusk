@@ -1,7 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # --------------------------------------------------------------------------------------------
 # dusk - a diskutil list wrapper with pretty output
+# --------------------------------------------------------------------------------------------
+# Author: Matej Stastny
+# Date: 2025-02-09
+# License: MIT license
 # --------------------------------------------------------------------------------------------
 
 PURPLE="\033[0;35m"
@@ -12,14 +16,26 @@ WHITE="\033[37m"
 BOLD="\033[1m"
 RESET="\033[0m"
 
+# Dependencies ------------------------------------------------------------------------------
+
+if [[ "$(uname)" != "Darwin" ]]; then
+    echo -e "${RED}Error: This script works only on macOS!${RESET}" >&2
+    exit 1
+fi
+
+if ! command -v diskutil >/dev/null 2>&1; then
+    echo -e "${RED}Error: diskutil command not found. This script requires diskutil.${RESET}" >&2
+    exit 1
+fi
+
 # Helpers ------------------------------------------------------------------------------------
 
 print_line() {
     local left=$1 mid=$2 right=$3
     printf "${BLUE}%s" "$left"
-    for col in $(seq 0 4); do
-        printf '─%.0s' $(seq 1 $((${widths[$col]} + 2)))
-        if [ $col -lt 4 ]; then
+    for col in {0..4}; do
+        printf '─%.0s' $(seq 1 $((widths[$col] + 2)))
+        if [[ $col -lt 4 ]]; then
             printf "%s" "$mid"
         fi
     done
@@ -30,12 +46,13 @@ print_row() {
     local arrname=$1
     eval "arr=(\"\${$arrname[@]}\")"
     printf "${BLUE}│${RESET}"
-    for col in $(seq 0 4); do
-        field="${arr[$col]}"
+    for col in {0..4}; do
+        local field="${arr[$col]}"
+        field="$(echo "$field" | sed 's/\x1b\[[0-9;]*m//g')"
         if [[ "${arr[0]}" == "#" || $col -eq 0 ]]; then
             printf " ${GREEN}%-${widths[$col]}s${RESET}${BLUE} │${RESET}" "$field"
         else
-            if [ $col -eq 1 ]; then
+            if [[ $col -eq 1 ]]; then
                 printf " \033[3m${PURPLE}%-${widths[$col]}s${RESET}${BLUE} │${RESET}" "$field"
             else
                 printf " ${WHITE}%-${widths[$col]}s${RESET}${BLUE} │${RESET}" "$field"
@@ -58,7 +75,7 @@ shift $((OPTIND - 1))
 
 # Grab disk data -----------------------------------------------------------------------------
 
-disks=$(diskutil list)
+LC_ALL=C disks=$(diskutil list)
 
 if [[ -z "$disks" ]]; then
     echo -e "${RED} ⚠️ diskutil list didn't return anything!${RESET}"
@@ -69,13 +86,41 @@ rows=()
 i=1
 
 while IFS= read -r line; do
-    [[ ! $line =~ ^/dev/disk ]] && continue
+    [[ ! "$line" =~ ^/dev/disk ]] && continue
 
     ident=$(echo "$line" | awk '{print $1}')
-    [[ $only_external -eq 1 && -z $(diskutil info "$ident" | grep External) ]] && continue
+    # Check external flag using plist if possible
+    external_flag=""
+    if plist_data=$(diskutil info -plist "$ident" 2>/dev/null); then
+        external_flag=$(echo "$plist_data" | plutil -extract "External" xml1 -o - - 2>/dev/null | grep -q "<true/>" && echo "true" || echo "false")
+    fi
+    if [[ $only_external -eq 1 && "$external_flag" != "true" ]]; then
+        continue
+    fi
+
     type=$(echo "$line" | awk -F '[()]' '{print $2}')
-    size=$(diskutil info "$ident" | awk -F': *' '/Disk Size/ {print $2; exit}' | awk -F' \\(' '{print $1}')
-    [[ -z "$size" ]] && size="-"
+
+    size="-"
+    if plist_data=$(diskutil info -plist "$ident" 2>/dev/null); then
+        size_bytes=$(echo "$plist_data" | plutil -extract "TotalSize" raw -o - - 2>/dev/null || echo "")
+        if [[ -n "$size_bytes" && "$size_bytes" =~ ^[0-9]+$ ]]; then
+            size=$(diskutil info "$ident" | awk -F': *' '/Disk Size/ {print $2; exit}' | awk -F' \\(' '{print $1}')
+            if [[ -z "$size" ]]; then
+                if command -v numfmt >/dev/null 2>&1; then
+                    size=$(numfmt --to=iec --suffix=B "$size_bytes")
+                else
+                    size="${size_bytes} B"
+                fi
+            fi
+        else
+            size=$(diskutil info "$ident" | awk -F': *' '/Disk Size/ {print $2; exit}' | awk -F' \\(' '{print $1}')
+            [[ -z "$size" ]] && size="-"
+        fi
+    else
+        size=$(diskutil info "$ident" | awk -F': *' '/Disk Size/ {print $2; exit}' | awk -F' \\(' '{print $1}')
+        [[ -z "$size" ]] && size="-"
+    fi
+
     mount=$(diskutil info "$ident" | awk -F': *' '/Mount Point/ {print $2; exit}')
     [[ -z "$mount" ]] && mount="-"
 
@@ -88,7 +133,7 @@ done <<<"$disks"
 headers=("#" "Identifier" "Size" "Type" "Mount")
 
 widths=()
-for col in $(seq 0 4); do
+for col in {0..4}; do
     max=${#headers[$col]}
     for row in "${rows[@]}"; do
         field=$(echo "$row" | cut -d'|' -f$((col + 1)))
@@ -110,3 +155,5 @@ for row in "${rows[@]}"; do
     print_row fields
 done
 print_line "╰" "┴" "╯"
+
+exit 0
