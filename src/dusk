@@ -3,10 +3,10 @@
 set -euo pipefail
 
 # --------------------------------------------------------------------------------------------
-# dusk - a diskutil list wrapper with pretty output
+# dusk - a diskutil list wrapper with a pretty output
 # --------------------------------------------------------------------------------------------
 # Author: Matej Stastny
-# Date: 09-02-2025 MDY
+# Date: 09-02-2025 (MDY)
 # License: MIT license
 # --------------------------------------------------------------------------------------------
 
@@ -173,9 +173,9 @@ printf '%s\n' "$@"
 
 # Grab disk data -----------------------------------------------------------------------------
 
-disks=$(diskutil list)
+raw=$(diskutil list)
 
-if [[ -z "$disks" ]]; then
+if [[ -z "$raw" ]]; then
     echo -e "${RED} ⚠️ diskutil list didn't return anything!${RESET}"
     exit 1
 fi
@@ -196,7 +196,16 @@ while IFS= read -r line; do
 
     rows+=("$i|$ident|$size|$type|$mount")
     ((i++))
-done <<<"$disks"
+done <<<"$raw"
+
+if [[ ${#rows[@]} -eq 0 ]]; then
+    if [[ $only_external -eq 1 ]]; then
+        echo -e "${RED} ⚠️ No external disks found!${RESET}"
+    else
+        echo -e "${RED} ⚠️ No disks found! This is very strange...${RESET}"
+    fi
+    exit 1
+fi
 
 # Calculate table ----------------------------------------------------------------------------
 
