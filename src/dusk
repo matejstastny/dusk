@@ -167,7 +167,7 @@ GETOPTIONSHERE
 
 parse "$@"
 eval "set -- $REST"
-printf '%s\n' "$@"
+[[ $# -gt 0 ]] && printf '%s\n' "$@"
 
 [[ -z "$only_external" ]] && only_external=0
 
