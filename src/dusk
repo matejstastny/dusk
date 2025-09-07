@@ -185,15 +185,25 @@ i=1
 
 while IFS= read -r line; do
     [[ ! $line =~ ^/dev/disk ]] && continue
-
     ident=$(echo "$line" | awk '{print $1}')
-    [[ $only_external -eq 1 && -z $(diskutil info "$ident" | grep External) ]] && continue
-    type=$(echo "$line" | awk -F '[()]' '{print $2}')
-    size=$(diskutil info "$ident" | awk -F': *' '/Disk Size/ {print $2; exit}' | awk -F' \\(' '{print $1}')
-    [[ -z "$size" ]] && size="-"
-    mount=$(diskutil info "$ident" | awk -F': *' '/Mount Point/ {print $2; exit}')
-    [[ -z "$mount" ]] && mount="-"
+    info=$(diskutil info "$ident")
+    if [[ $only_external -eq 1 && -z $(echo "$info" | grep -q "External: *Yes") ]]; then
+        continue
+    fi
 
+    type=$(echo "$line" | awk -F '[()]' '{print $2}')
+    size=$(
+        echo "$info" | awk -F':' '
+    /Disk Size/ {
+        gsub(/^[ \t]+|[ \t]+$/, "", $2);
+        sub(/ \(.*\)$/, "", $2);
+        print $2;
+        exit
+    }'
+    )
+    [[ -z "$size" ]] && size="-"
+    mount=$(echo "$info" | awk -F':' '/Mount Point/ {gsub(/^ +| +$/,"",$2); print $2; exit}')
+    [[ -z "$mount" ]] && mount="-"
     rows+=("$i|$ident|$size|$type|$mount")
     ((i++))
 done <<<"$raw"
