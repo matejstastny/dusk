@@ -1,0 +1,38 @@
+.TH dusk 1 "September 2025" "dusk 0.1.0" "User Commands"
+.SH NAME
+dusk \- a diskutil list wrapper with pretty output
+.SH SYNOPSIS
+.B dusk
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+\fBdusk\fR is a CLI tool written in bash that wraps the macOS
+\fIdiskutil list\fR command and shows the output
+in a styled, colorized table.
+
+It is designed for macOS only, since it relies on the
+\fIdiskutil\fR utility.
+.SH OPTIONS
+.TP
+.BR -e ", " --external
+Show only external disks.
+.TP
+.BR -h ", " --help
+Display usage help.
+.TP
+.BR -v ", " --version
+Print version information.
+.SH EXAMPLES
+.TP
+List all disks:
+.EX
+dusk
+.EE
+.TP
+List only external disks:
+.EX
+dusk -e
+.EE
+.SH AUTHOR
+Matej Stastny
+.SH LICENSE
+MIT License

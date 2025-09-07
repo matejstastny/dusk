@@ -2,6 +2,7 @@
   "recommendations": [
     "foxundermoon.shell-format",
     "jeff-hykin.better-shellscript-syntax",
-    "mads-hartmann.bash-ide-vscode"
+    "mads-hartmann.bash-ide-vscode",
+    "motivesoft.vscode-man-page-syntax"
   ]
 }
