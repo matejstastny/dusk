@@ -27,4 +27,4 @@ To install dusk from source, clone this repo and then run `sudo make install`. T
 
 #### Flags
 
-Running `dusk` lists all disks, numbers them for clarity, and for each one it displays the size, type, and mount point. If any of that information is not accessible, it will print a dash instead. Use `dusk -e` to show only external disks, `dusk -v` to check the version, and `dusk -h` to show a help message. The output is designed to be readable and suitable for both casual use or to be used inside another project. Dusk also uses the [`getoptions`](https://github.com/ko1nksm/getoptions) tool.
+Running `dusk` lists all disks, numbers them for clarity, and for each one it displays the size, type, and mount point. If any of that information is not accessible, it will print a dash instead. Use `dusk -e` to show only external disks, `dusk -v` to check the version, and `dusk -h` to show a help message. The output is designed to be readable and suitable for both casual use or to be used inside another project. Dusk also uses the [`getoptions`](https://github.com/ko1nksm/getoptions).
