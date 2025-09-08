@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: matejstastny/homebrew-dusk
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_FOR_TAP_UPDATE }}
           ref: main
 
       - name: Download release archive
