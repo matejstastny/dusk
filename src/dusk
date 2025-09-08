@@ -10,7 +10,7 @@ set -euo pipefail
 # License: MIT license
 # --------------------------------------------------------------------------------------------
 
-VERSION="dusk version 0.1.0 (dev)"
+VERSION="dusk version 1.0.0"
 
 PURPLE="\033[0;35m"
 RED="\033[31m"
