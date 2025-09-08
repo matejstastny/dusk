@@ -187,8 +187,10 @@ while IFS= read -r line; do
     [[ ! $line =~ ^/dev/disk ]] && continue
     ident=$(echo "$line" | awk '{print $1}')
     info=$(diskutil info "$ident")
-    if [[ $only_external -eq 1 && -z $(echo "$info" | grep -q "External: *Yes") ]]; then
-        continue
+    if [[ $only_external -eq 1 ]]; then
+        if ! echo "$info" | grep -qE "^[[:space:]]*(Device Location:[[:space:]]*External|Removable Media:[[:space:]]*Removable)"; then
+            continue
+        fi
     fi
 
     type=$(echo "$line" | awk -F '[()]' '{print $2}')
