@@ -1,0 +1,30 @@
+name: Update Script version
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Update version in script
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "Updating src/dusk VERSION to $TAG"
+          sed -i "s/^VERSION=.*/VERSION=\"dusk version $TAG\"/" src/dusk
+
+      - name: Commit updated version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/dusk
+          git commit -m "Update dusk VERSION to $TAG"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
