@@ -22,6 +22,7 @@ brew install dusk
 ```
 
 #### Manual Install
+
 To install dusk from source, clone this repo and then run `sudo make install`. This will copy the script to `/usr/local/bin` so it can be used globally, and it also installs the dusk man page. To uninstall dusk, simply run `sudo make uninstall` in the cloned repo directory. This will remove both the script and the man page.
 
 #### Flags
